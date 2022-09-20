@@ -1,0 +1,2 @@
+"0","g <- ggplot(data = mtcars, aes(x = factor(am), y = mpg))"
+"0","g + geom_boxplot() + ggtitle(""Miles per Galon vs Transmission Type"") + xlab(""Transmission Type [0: auto ; 1: manual]"") + ylab(""Miles per Galon"")"

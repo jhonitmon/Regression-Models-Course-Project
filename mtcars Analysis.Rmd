@@ -1,0 +1,117 @@
+---
+title: "Analysis on the relationship between Transmission Type and MPG"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+# Introduction
+
+In this analysis I will try to find if there is a relationship between a set of variables and the miles per galons of a set of cars. To do this, we will use the *mtcars* dataset that is included in R.
+
+The data set includes the following:
+
+A data frame with 32 observations on 11 (numeric) variables.
+
+* [, 1]	mpg	Miles/(US) gallon
+* [, 2]	cyl	Number of cylinders
+* [, 3]	disp	Displacement (cu.in.)
+* [, 4]	hp	Gross horsepower
+* [, 5]	drat	Rear axle ratio
+* [, 6]	wt	Weight (1000 lbs)
+* [, 7]	qsec	1/4 mile time
+* [, 8]	vs	Engine (0 = V-shaped, 1 = straight)
+* [, 9]	am	Transmission (0 = automatic, 1 = manual)
+* [,10]	gear	Number of forward gears
+* [,11]	carb	Number of carburetors
+
+The course project asks two questions:
+
+* Is an automatic or manual transmission better for MPG?
+* Quantify the MPG difference between automatic and manual transmissions
+
+# Exploratory Data Analysis
+
+We begin by loading the necessary libraries and the data set: 
+
+```{r}
+library(ggplot2)
+data(mtcars)
+mtcars$cyl = as.factor(mtcars$cyl)
+mtcars$vs = as.factor(mtcars$vs)
+mtcars$am = as.factor(mtcars$am)
+```
+
+```{r}
+head(mtcars)
+```
+```{r}
+str(mtcars)
+```
+
+We can then use some graphics to find a visible relationship:
+```{r}
+pairs(mtcars)
+```
+
+Seeing the pairs plot, we can identify the following for mpg:
+
+* A negative relationship with disp, hp, cyl and wt.
+* A positive relationship with drat and qsec.
+* A clear difference between vs and am.
+
+Since the scope of this study only includes the transmission type, we will only analyse the am variable
+
+```{r}
+g <- ggplot(data = mtcars, aes(x = factor(am), y = mpg))
+g + geom_boxplot() + ggtitle("Miles per Galon vs Transmission Type") + xlab("Transmission Type [0: auto ; 1: manual]") + ylab("Miles per Galon")
+```
+
+Using this boxplot, we could assume that there is a very clear difference between the fuel efficiency of automatic and manual cars, showing that manual transmissions lead to a better mileage. We wan't to test if there is a statistically significant difference in the gas mileage of both types of transmissions. 
+
+# Statistical Analysis
+To do this, we perform a T test to compare the medians
+```{r}
+t.test(mpg ~ am, data = mtcars)
+```
+
+Using a p-value of 0.025 (two-sided test) shows that there is a significant difference in the medians of both groups, meaning that manual cars do have a better gas mileage than those with automatic transmissions.
+
+# Regression Model
+
+To find a proper regression model, we start with a basic linear model using mpg as the outcome and am as the regression:
+
+```{r}
+fit <- lm(mpg ~ am, data = mtcars)
+summary(fit)
+```
+
+We haven an adjusted R-squared of 0.3385, meaning that our model is not very accurate and that am only accounts for around 33% of the increase in mpg. We can test and overfit this model using all variables:
+
+```{r}
+fit_all <- lm(mpg ~ ., data = mtcars)
+summary(fit_all)
+```
+
+Here we have a better R-squared, but using a p-value of 0.05 shows that none of the variables are significant, which is a sign of overfitting. At this point we use the *step* function to iteratively find a model that better fits our data:
+
+```{r}
+fit_step <- step(fit_all, trace = F)
+summary(fit_step)
+```
+
+All variables in this model have a p-value bigger than 0.05, meaning they are statistically significant. The step function chose the variables *wt*,*qsec* and *am* for our new model.
+The confidence interval for this assumption is:
+
+```{r}
+confint(fit_step)["am1",]
+```
+```{r}
+par(mfrow = c(2,2))
+plot(fit_step)
+```
+
+The Residuals vs. Fitted plot shows that the residuals are uncorrelated with the fitted values and the Normal Q-Q plot shows that the distribution is roughly normal
+
+# Conclusions
+After analyzing the data we can conclude that there is a strong relationship between transmission type and gas mileage. Other significant variables are the Weight and the 1/4 mile time of the vehicle.

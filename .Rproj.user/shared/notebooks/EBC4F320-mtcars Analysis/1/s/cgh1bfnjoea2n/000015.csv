@@ -1,0 +1,5 @@
+"0","library(ggplot2)"
+"0","data(mtcars)"
+"0","mtcars$cyl = as.factor(mtcars$cyl)"
+"0","mtcars$vs = as.factor(mtcars$vs)"
+"0","mtcars$am = as.factor(mtcars$am)"
